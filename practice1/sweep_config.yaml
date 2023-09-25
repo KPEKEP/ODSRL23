@@ -1,4 +1,4 @@
-name: cross_entropy_agent_sweep
+name: cross_entropy_agent_sweep_p1
 method: grid
 metric:
   goal: maximize
@@ -9,10 +9,10 @@ parameters:
   train:
     values: [true]
   trajectory_n:
-    values: [500, 1000, 1500, 2000, 2500, 3000]
+    values: [100, 200, 300, 400, 500, 600]
   iteration_n:
     values: [200, 400, 600, 800, 1000]
   gamma_q:
-    values: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    values: [0.1, 0.2, 0.3, 0.4, 0.5]
   max_trajectory_len:
-    values: [100, 500, 1000, 1500, 2000]
+    values: [50, 100, 150, 200]

@@ -184,7 +184,7 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser(description="Train and evaluate a CrossEntropyAgent.")
         parser.add_argument("--env", type=str, default="Taxi-v3", help="Gym environment name.")
         parser.add_argument("--train", action="store_true", help="Flag to train the model.")
-        parser.add_argument("--filename", type=str, default="agent.ckpt.npy", help="File name to save/load the model.")
+        parser.add_argument("--filename", type=str, default=None, help="File name to save/load the model.")
         parser.add_argument("--trajectory_n", type=int, default=2500, help="Number of trajectories.")
         parser.add_argument("--iteration_n", type=int, default=1000, help="Number of iterations.")
         parser.add_argument("--gamma_q", type=float, default=0.5, help="Gamma quantile.")
