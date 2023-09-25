@@ -39,9 +39,9 @@ class CrossEntropyAgent:
         action = np.random.choice(self.actions, p=self.model[state])
         return action.item()
 
-    def fit(self, trajectories):
+    def fit(self, trajectories, laplace_lambda = 0.0, policy_lambda = 1.0):
         """Update the policy based on the provided trajectories."""
-        new_model = np.zeros(self.model.shape)
+        new_model = np.full(self.model.shape, laplace_lambda)
 
         # Accumulate counts for state-action pairs
         for trajectory in trajectories:
@@ -56,7 +56,8 @@ class CrossEntropyAgent:
         zero_rows = np.logical_not(non_zero_rows)
         new_model[zero_rows] = self.model[zero_rows]
 
-        self.model = new_model
+        # apply policy smoothing
+        self.model = policy_lambda * new_model + (1 - policy_lambda) * self.model
 
     def save(self, filename):
         """Save the agent's model to a file."""
@@ -105,7 +106,10 @@ class Trainer:
 
         return trajectory
 
-    def train(self, trajectory_n, iteration_n, gamma_q, max_trajectory_len, verbose=True):
+    def train(self, trajectory_n, iteration_n, 
+              gamma_q, max_trajectory_len, 
+              laplace_f=0.0, policy_f=1.0,
+              verbose=True):
         """Train the agent using the Cross Entropy method."""
         traj_len_interp = FancyInterpolator(trajectory_n, trajectory_n * 0.1)
         quant_interp = FancyInterpolator(gamma_q, gamma_q / 100)
@@ -136,7 +140,7 @@ class Trainer:
             elite_trajectories = [trajectory for i, trajectory in enumerate(trajectories) if total_rewards[i] > quantile]
 
             # Fit agent
-            self.agent.fit(elite_trajectories)
+            self.agent.fit(elite_trajectories, laplace_f, policy_f)
 
             results.append({
                 'min_total_reward': min_total_reward,
@@ -188,6 +192,8 @@ if __name__ == "__main__":
         parser.add_argument("--trajectory_n", type=int, default=2500, help="Number of trajectories.")
         parser.add_argument("--iteration_n", type=int, default=1000, help="Number of iterations.")
         parser.add_argument("--gamma_q", type=float, default=0.5, help="Gamma quantile.")
+        parser.add_argument("--laplace_f", type=float, default=0.0, help="Laplace smoothing factor.")
+        parser.add_argument("--policy_f", type=float, default=1.0, help="Policy smoothing factor.")
         parser.add_argument("--max_trajectory_len", type=int, default=None, help="Maximum trajectory length.")
         parser.add_argument("--render", action="store_true", help="Render the environment during training and evaluation.") 
         parser.add_argument("--project", type=str, default="cross_entropy_agent_project", help="Name for the project for wandb")
@@ -200,6 +206,8 @@ if __name__ == "__main__":
             args.trajectory_n = wandb.config.trajectory_n
             args.iteration_n = wandb.config.iteration_n
             args.gamma_q = wandb.config.gamma_q
+            args.laplace_f = wandb.config.laplace_f
+            args.policy_f = wandb.config.policy_f
             args.max_trajectory_len = wandb.config.max_trajectory_len
             args.train = wandb.config.train if hasattr(wandb.config, 'train') else args.train
             if hasattr(wandb.config, 'filename'):
@@ -223,7 +231,9 @@ if __name__ == "__main__":
         trainer = Trainer(env, agent, render=args.render)
 
         if args.train:
-            trainer.train(args.trajectory_n, args.iteration_n, args.gamma_q, args.max_trajectory_len or 2 * state_n)
+            trainer.train(args.trajectory_n, args.iteration_n, 
+                          args.gamma_q, args.max_trajectory_len or 2 * state_n,
+                          args.laplace_f, args.policy_f)
             agent.save(args.filename)
 
         # Evaluate
