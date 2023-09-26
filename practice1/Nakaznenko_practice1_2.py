@@ -41,7 +41,7 @@ class CrossEntropyAgent:
 
     def fit(self, trajectories, laplace_lambda = 0.0, policy_lambda = 1.0):
         """Update the policy based on the provided trajectories."""
-        new_model = np.full(self.model.shape, laplace_lambda)
+        new_model = np.full(self.model.shape, laplace_lambda, dtype=self.model.dtype)
 
         # Accumulate counts for state-action pairs
         for trajectory in trajectories:
@@ -215,7 +215,7 @@ if __name__ == "__main__":
             elif not args.filename:
                 if (not os.path.exists("checkpoints")):
                     os.mkdir("checkpoints")
-                args.filename = f"{checkpoints}/{wandb.run.name}.ckpt.npy"
+                args.filename = f"checkpoints/{wandb.run.name}.ckpt.npy"
             args.render = wandb.config.render if hasattr(wandb.config, 'render') else args.render
 
 

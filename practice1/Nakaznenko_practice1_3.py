@@ -41,7 +41,7 @@ class CrossEntropyAgent:
 
     def fit(self, trajectories, laplace_lambda = 0.0, policy_lambda = 1.0):
         """Update the policy based on the provided trajectories."""
-        new_model = np.full(self.model.shape, laplace_lambda)
+        new_model = np.full(self.model.shape, laplace_lambda, dtype=self.model.dtype)
 
         # Accumulate counts for state-action pairs
         for trajectory in trajectories:
@@ -116,8 +116,6 @@ class Trainer:
         traj_len_interp = FancyInterpolator(trajectory_n, trajectory_n * 0.1)
         quant_interp = FancyInterpolator(gamma_q, gamma_q / 100)
 
-        results = []
-
         for it in tqdm(range(iteration_n), desc="Train"):
             t = it / iteration_n
             max_traj = int(traj_len_interp(t)) if self.interpolate else trajectory_n
@@ -132,8 +130,7 @@ class Trainer:
 
                 trajectories += [current_trajectories]
                 total_rewards += [current_total_rewards]
-                mean_total_rewards += current_mean_total_reward
-                
+                mean_total_rewards += [current_mean_total_reward]
                 current_min_total_reward = np.min(current_total_rewards)
                 current_max_total_reward = np.max(current_total_rewards)
     
@@ -152,7 +149,7 @@ class Trainer:
             elite_trajectories = []
             if is_stochastic:
                 quantile = np.quantile(mean_total_rewards, q)
-                for i, mtr in mean_total_rewards:
+                for i, mtr in enumerate(mean_total_rewards):
                     if mtr > quantile:
                         elite_trajectories += [trajectory for trajectory in trajectories[i]]
             else:
@@ -162,13 +159,8 @@ class Trainer:
             # Fit agent
             self.agent.fit(elite_trajectories, laplace_f, policy_f)
 
-            results.append({
-                'min_total_reward': min_total_reward,
-                'mean_total_reward': mean_total_reward,
-                'max_total_reward': max_total_reward
-            })
 
-        return results
+        return
 
     def eval(self, trajectory_n, iteration_n, max_trajectory_len, verbose=True):
         """Evaluate the agent's performance."""
@@ -232,12 +224,15 @@ if __name__ == "__main__":
             args.policy_f = wandb.config.policy_f
             args.max_trajectory_len = wandb.config.max_trajectory_len
             args.train = wandb.config.train if hasattr(wandb.config, 'train') else args.train
+            args.num_policy_samples = wandb.config.num_policy_samples
+            args.is_stochastic = wandb.config.is_stochastic
+            
             if hasattr(wandb.config, 'filename'):
                 args.filename = wandb.config.filename
             elif not args.filename:
                 if (not os.path.exists("checkpoints")):
                     os.mkdir("checkpoints")
-                args.filename = f"{checkpoints}/{wandb.run.name}.ckpt.npy"
+                args.filename = f"checkpoints/{wandb.run.name}.ckpt.npy"
             args.render = wandb.config.render if hasattr(wandb.config, 'render') else args.render
 
 

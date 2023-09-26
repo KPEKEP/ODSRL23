@@ -207,7 +207,7 @@ if __name__ == "__main__":
             elif not args.filename:
                 if (not os.path.exists("checkpoints")):
                     os.mkdir("checkpoints")
-                args.filename = f"{checkpoints}/{wandb.run.name}.ckpt.npy"
+                args.filename = f"checkpoints/{wandb.run.name}.ckpt.npy"
             args.render = wandb.config.render if hasattr(wandb.config, 'render') else args.render
 
 
