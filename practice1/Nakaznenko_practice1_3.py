@@ -6,6 +6,7 @@ import time
 import logging
 import wandb
 import os
+import random
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -80,11 +81,11 @@ class Trainer:
         """Convert observation to state."""
         return int(obs)
 
-    def get_trajectory(self, max_trajectory_len):
+    def get_trajectory(self, max_trajectory_len, seed):
         """Generate a trajectory using the agent's policy."""
         trajectory = {'states': [], 'actions': [], 'rewards': []}
 
-        obs = self.env.reset()
+        obs = self.env.reset(seed=seed)
         state = self.get_state(obs)
 
         for _ in range(max_trajectory_len):
@@ -110,11 +111,11 @@ class Trainer:
               gamma_q, max_trajectory_len,
               laplace_f=0.0, policy_f=1.0,
               num_policy_samples=1,
-              is_stochastic=False,
               verbose=True):
         """Train the agent using the Cross Entropy method."""
         traj_len_interp = FancyInterpolator(trajectory_n, trajectory_n * 0.1)
         quant_interp = FancyInterpolator(gamma_q, gamma_q / 100)
+        is_stochastic = num_policy_samples > 1
 
         for it in tqdm(range(iteration_n), desc="Train"):
             t = it / iteration_n
@@ -123,8 +124,9 @@ class Trainer:
             trajectories = []
             total_rewards = []
             mean_total_rewards = []
+            seed = random.randint(0, 1000000)
             for i in range(num_policy_samples):
-                current_trajectories = [self.get_trajectory(max_trajectory_len) for _ in range(max_traj)]
+                current_trajectories = [self.get_trajectory(max_trajectory_len, seed + ti) for ti in range(max_traj)]
                 current_total_rewards = [self.get_total_reward(trajectory) for trajectory in current_trajectories]
                 current_mean_total_reward = np.mean(current_total_rewards)
 
@@ -153,6 +155,8 @@ class Trainer:
                     if mtr > quantile:
                         elite_trajectories += [trajectory for trajectory in trajectories[i]]
             else:
+                trajectories = np.concatenate(trajectories).ravel()
+                total_rewards = np.concatenate(total_rewards).ravel()
                 quantile = np.quantile(total_rewards, q)
                 elite_trajectories = [trajectory for i, trajectory in enumerate(trajectories) if total_rewards[i] > quantile]
 
@@ -166,7 +170,7 @@ class Trainer:
         """Evaluate the agent's performance."""
         results = []
         for it in tqdm(range(iteration_n), desc="Eval"):
-            trajectories = [self.get_trajectory(max_trajectory_len) for _ in range(trajectory_n)]
+            trajectories = [self.get_trajectory(max_trajectory_len, seed = random.randint(1, 100000)) for ti in range(trajectory_n)]
             total_rewards = [self.get_total_reward(trajectory) for trajectory in trajectories]
             mean_total_reward = np.mean(total_rewards)
             min_total_reward = np.min(total_rewards)
@@ -209,7 +213,6 @@ if __name__ == "__main__":
         parser.add_argument("--max_trajectory_len", type=int, default=None, help="Maximum trajectory length.")
         parser.add_argument("--render", action="store_true", help="Render the environment during training and evaluation.") 
         parser.add_argument("--project", type=str, default="cross_entropy_agent_project", help="Name for the project for wandb")
-        parser.add_argument("--is_stochastic", action="store_true", help="Indicate that env is stochastic")
         parser.add_argument("--num_policy_samples", type=int, default=1, help="Number of sample of a stochastic policy")
         args = parser.parse_args()
 
@@ -225,7 +228,6 @@ if __name__ == "__main__":
             args.max_trajectory_len = wandb.config.max_trajectory_len
             args.train = wandb.config.train if hasattr(wandb.config, 'train') else args.train
             args.num_policy_samples = wandb.config.num_policy_samples
-            args.is_stochastic = wandb.config.is_stochastic
             
             if hasattr(wandb.config, 'filename'):
                 args.filename = wandb.config.filename
@@ -251,7 +253,7 @@ if __name__ == "__main__":
             trainer.train(args.trajectory_n, args.iteration_n, 
                           args.gamma_q, args.max_trajectory_len or 2 * state_n,
                           args.laplace_f, args.policy_f, 
-                          args.num_policy_samples, args.is_stochastic)
+                          args.num_policy_samples)
             agent.save(args.filename)
 
         # Evaluate

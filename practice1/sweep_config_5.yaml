@@ -1,0 +1,24 @@
+name: cross_entropy_agent_sweep_p5
+method: grid
+metric:
+  goal: maximize
+  name: Evaluation/Mean_Total_Reward
+parameters:
+  env:
+    values: ["Taxi-v3"]
+  train:
+    values: [true]
+  laplace_f: 
+    values: [0.0]
+  policy_f: 
+    values: [1.0, 0.5, 0.0]    
+  trajectory_n:
+    values: [2000]
+  iteration_n:
+    values: [25]
+  gamma_q:
+    values: [0.3]
+  max_trajectory_len:
+    values: [200]
+  num_policy_samples:
+    values: [3]
