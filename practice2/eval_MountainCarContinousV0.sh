@@ -1,0 +1,1 @@
+python .\Nakaznenko_practice2_1.py --env MountainCarContinuous-v0 --agent DeepCrossEntropyAgent --trajectory_n 1 --max_trajectory_len 1000 --episode_n 10 --fp32 --filename DCEM_MountainCarContinuousV0.pth --num_proc 1 --cpu --render --record

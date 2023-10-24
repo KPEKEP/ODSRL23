@@ -1,0 +1,1 @@
+python .\Nakaznenko_practice2_1.py --env LunarLander-v2 --agent DeepCrossEntropyAgent --trajectory_n 1 --max_trajectory_len 5000 --episode_n 10 --fp32 --filename DCEM_LunarLanderV2.pth --num_proc 1 --cpu --render --record

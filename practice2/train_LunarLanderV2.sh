@@ -1,0 +1,1 @@
+python .\Nakaznenko_practice2_1.py --env LunarLander-v2 --agent DeepCrossEntropyAgent --trajectory_n 500 --max_trajectory_len 5000 --episode_n 500 --gamma_q 0.9 --delta_q -1 --lr 0.001 --fp32 --train --filename DCEM_LunarLanderV2.pth --num_proc 1 --exploration 0.0 --gamma_discount 1.0 --cpu --goal 250 --batch_size -1 --fit_attempts 30

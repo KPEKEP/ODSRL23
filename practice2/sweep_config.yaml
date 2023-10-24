@@ -1,0 +1,38 @@
+name: Practice2
+method: grid
+metric:
+  goal: maximize
+  name: Evaluation/Mean_Total_Reward
+parameters:
+  agent:
+    values: ["DeepCrossEntropyAgent"]
+  env:
+    values: ["LunarLander-v2"]
+  trajectory_n:
+    values: [1000]
+  episode_n:
+    values: [150]
+  gamma_q:
+    values: [0.95]
+  max_trajectory_len:
+    values: [10000]
+  train:
+    values: [true]
+  lr:
+    values: [0.1]
+  cpu:
+    values: [true]
+  fp32:
+    values: [true]
+  fit_attempt_n:
+    values: [50]
+  num_proc:
+    values: [4]
+  exploration:
+    values: [0.5]
+  gamma_discount:
+    values: [1.0]
+  bottom:
+    values: ["-inf"]
+  goal:
+    values: ["inf"]

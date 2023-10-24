@@ -1,0 +1,1 @@
+python .\Nakaznenko_practice2_1.py --env MountainCarContinuous-v0 --agent DeepCrossEntropyAgent --trajectory_n 500 --max_trajectory_len 1000 --episode_n 100 --gamma_q 0.99 --delta_q 0.2 --lr 0.001 --fp32 --train --filename DCEM_MountainCarContinuousV0.pth --fit_attempts 100 --num_proc 10 --exploration 0.5 --gamma_discount 1.0 --cpu --goal 95 --batch_size -1
